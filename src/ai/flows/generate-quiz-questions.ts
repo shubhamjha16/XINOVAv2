@@ -40,7 +40,7 @@ export type QuizQuestion = z.infer<typeof QuizQuestionSchema>;
 const GenerateQuizQuestionsOutputSchema = z.object({
   information: z.string().optional().describe('Generated background information about the topic. This might be empty if generation failed.'),
   flowchart: z.string().optional().describe('A textual representation of a flowchart summarizing the information. This might be empty if not applicable or generation failed.'),
-  quiz: z.array(QuizQuestionSchema).describe('An array of 15 quiz questions (10 multiple-choice, 5 coding). If the topic is too broad or ambiguous, or if info generation failed, this array might be empty.'),
+  quiz: z.array(QuizQuestionSchema).describe('An array of 15 quiz questions (10 multiple-choice, 5 coding), sorted by difficulty (easy, medium, hard) then coding questions. If the topic is too broad or ambiguous, or if info generation failed, this array might be empty.'),
 });
 export type GenerateQuizQuestionsOutput = z.infer<typeof GenerateQuizQuestionsOutputSchema>;
 
@@ -166,6 +166,23 @@ export async function generateQuizQuestions(input: GenerateQuizQuestionsInput): 
   return generateQuizQuestionsFlow(input);
 }
 
+// Helper function to sort quiz questions
+function sortQuizQuestions(quiz: QuizQuestion[]): QuizQuestion[] {
+  const difficultyOrder = ['easy', 'medium', 'hard'];
+
+  const nonCodingQuestions = quiz.filter(q => !q.isCodingQuestion);
+  const codingQuestions = quiz.filter(q => q.isCodingQuestion);
+
+  nonCodingQuestions.sort((a, b) => {
+    const diffAIndex = difficultyOrder.indexOf(a.difficulty);
+    const diffBIndex = difficultyOrder.indexOf(b.difficulty);
+    return diffAIndex - diffBIndex;
+  });
+
+  return [...nonCodingQuestions, ...codingQuestions];
+}
+
+
 // The main flow orchestrating the three steps: info -> flowchart & quiz
 const generateQuizQuestionsFlow = ai.defineFlow<
   typeof GenerateQuizQuestionsInputSchema,
@@ -223,12 +240,14 @@ const generateQuizQuestionsFlow = ai.defineFlow<
         quiz = quizResult.value.output?.quiz ?? [];
          if (quiz.length === 0) {
            console.warn(`Quiz generation yielded an empty array for topic "${input.topic}".`);
-         } else if (quiz.length < 15) {
-             console.warn(`Quiz generation yielded only ${quiz.length} questions (expected 15) for topic "${input.topic}".`);
+         } else {
+             // Sort the quiz questions before returning
+             quiz = sortQuizQuestions(quiz);
+             console.log(`Quiz (${quiz.length} questions) generated and sorted successfully for: ${input.topic}`);
+             if (quiz.length < 15) {
+                 console.warn(`Quiz generation yielded only ${quiz.length} questions (expected 15).`);
+             }
          }
-          else {
-            console.log(`Quiz (15 questions) generated successfully for: ${input.topic}`);
-          }
       } else {
         console.error(`Error generating quiz for topic "${input.topic}":`, quizResult.reason);
         // Proceed without quiz if it fails
@@ -242,7 +261,7 @@ const generateQuizQuestionsFlow = ai.defineFlow<
     }
 
 
-    // Return all generated components
+    // Return all generated components (with sorted quiz)
     return { information, flowchart, quiz };
   }
 );
