@@ -12,12 +12,35 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, Loader2, Info, Workflow } from 'lucide-react'; // Added Workflow icon
+import { CheckCircle, XCircle, Loader2, Info, Workflow, Code } from 'lucide-react'; // Added Code icon
 import { cn } from "@/lib/utils";
 import { Separator } from '@/components/ui/separator';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'; // Import SyntaxHighlighter
+import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Choose a style
 
 type QuizQuestion = GenerateQuizQuestionsOutput['quiz'][0];
 type AnswerOption = keyof QuizQuestion['options'];
+
+// Custom renderer for code blocks in Markdown
+const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
+  const match = /language-(\w+)/.exec(className || '');
+  return !inline && match ? (
+    <SyntaxHighlighter
+      style={a11yDark} // Use the imported style
+      language={match[1]}
+      PreTag="div"
+      {...props}
+    >
+      {String(children).replace(/\n$/, '')}
+    </SyntaxHighlighter>
+  ) : (
+    <code className={cn("bg-muted px-1 py-0.5 rounded font-mono text-sm", className)} {...props}>
+      {children}
+    </code>
+  );
+};
+
 
 export default function Home() {
   const [topic, setTopic] = useState('');
@@ -61,9 +84,17 @@ export default function Home() {
         setQuiz(result.quiz);
          toast({
            title: 'Success!',
-           description: `Generated info, flowchart, and quiz for "${topic}".`,
+           description: `Generated info, flowchart, and ${result.quiz.length}-question quiz for "${topic}".`,
            variant: 'success',
          });
+         if (result.quiz.length < 15) {
+            toast({
+                title: 'Note',
+                description: `Only generated ${result.quiz.length} questions. Some coding questions might be missing.`,
+                variant: 'warning',
+                duration: 5000,
+            })
+         }
       } else if (result.information && result.information.trim() !== '') {
         // Info generated, maybe flowchart, but no quiz
          toast({
@@ -84,10 +115,13 @@ export default function Home() {
       console.error('Error generating quiz:', error);
       let errorMessage = 'An unexpected error occurred while generating the content.';
       if (error instanceof Error) {
-        // Check for specific overload error
+        // Check for specific overload error or API errors
         if (error.message.includes('503') || error.message.toLowerCase().includes('overloaded')) {
             errorMessage = `The AI model is currently overloaded. Please wait a moment and try again.`;
-        } else {
+        } else if (error.message.toLowerCase().includes('api key')) {
+             errorMessage = `There seems to be an issue with the AI service API key. Please check configuration.`;
+        }
+         else {
             errorMessage = `Error generating content: ${error.message}. Please check the console for more details.`;
         }
       }
@@ -195,9 +229,13 @@ export default function Home() {
                       Background Information on "{topic}"
                     </h3>
                     <Separator />
-                    <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
+                    {/* Render background info using ReactMarkdown */}
+                    <ReactMarkdown
+                      className="prose dark:prose-invert max-w-none text-base text-foreground leading-relaxed"
+                       components={{ code: CodeBlock }} // Use custom code renderer
+                     >
                       {backgroundInfo}
-                    </p>
+                    </ReactMarkdown>
                  </div>
               )}
 
@@ -216,26 +254,40 @@ export default function Home() {
               )}
 
 
-              {showQuizArea && (
+              {showQuizArea && currentQuestion && ( // Ensure currentQuestion is not null
                 <div className="space-y-6">
                   {/* Quiz Title */}
                   <h3 className="text-2xl font-semibold text-center text-primary">Quiz Time!</h3>
 
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                      <p className="text-sm text-muted-foreground">Question {currentQuestionIndex + 1} of {quiz.length}</p>
-                     <Badge
-                        variant={
-                          currentQuestion!.difficulty === 'easy' ? 'success' :
-                          currentQuestion!.difficulty === 'medium' ? 'warning' :
-                          'destructive'
-                        }
-                        className="uppercase text-xs px-2 py-1"
-                     >
-                       {currentQuestion!.difficulty}
-                     </Badge>
+                     <div className="flex items-center gap-2">
+                        {currentQuestion.isCodingQuestion && (
+                            <Badge variant="secondary" className="text-xs px-2 py-1">
+                                <Code className="h-3 w-3 mr-1" /> Coding
+                            </Badge>
+                        )}
+                         <Badge
+                            variant={
+                              currentQuestion.difficulty === 'easy' ? 'success' :
+                              currentQuestion.difficulty === 'medium' ? 'warning' :
+                              'destructive'
+                            }
+                            className="uppercase text-xs px-2 py-1"
+                         >
+                           {currentQuestion.difficulty}
+                         </Badge>
+                     </div>
                   </div>
 
-                  <p className="text-xl font-semibold text-center text-foreground">{currentQuestion!.question}</p>
+                  {/* Render question using ReactMarkdown */}
+                   <ReactMarkdown
+                     className="prose dark:prose-invert max-w-none text-xl font-semibold text-center text-foreground"
+                     components={{ code: CodeBlock }} // Use custom code renderer
+                   >
+                     {currentQuestion.question}
+                   </ReactMarkdown>
+
 
                   <RadioGroup
                     value={selectedAnswer ?? undefined}
@@ -243,8 +295,8 @@ export default function Home() {
                     className="space-y-4"
                     disabled={showFeedback}
                   >
-                    {(Object.keys(currentQuestion!.options) as AnswerOption[]).map((optionKey) => {
-                      const isCorrect = optionKey === currentQuestion!.correct_answer;
+                    {(Object.keys(currentQuestion.options) as AnswerOption[]).map((optionKey) => {
+                      const isCorrect = optionKey === currentQuestion.correct_answer;
                       const isSelected = selectedAnswer === optionKey;
 
                       return (
@@ -252,7 +304,7 @@ export default function Home() {
                           key={optionKey}
                           htmlFor={optionKey}
                           className={cn(
-                            "flex items-center space-x-3 rounded-md border p-4 transition-all duration-150 ease-in-out cursor-pointer",
+                            "flex items-start space-x-3 rounded-md border p-4 transition-all duration-150 ease-in-out cursor-pointer", // Use items-start for better alignment with markdown
                             "bg-card hover:bg-secondary/30", // Base and hover
                             !showFeedback && isSelected && "border-accent bg-accent/10 ring-2 ring-accent", // Selected but not submitted
                             showFeedback && isCorrect && "border-green-500 bg-green-50 dark:bg-green-950/50 ring-2 ring-green-500", // Correct answer shown
@@ -261,11 +313,17 @@ export default function Home() {
                             showFeedback && !isSelected && !isCorrect && "opacity-60" // Dim unselected, incorrect options
                           )}
                         >
-                          <RadioGroupItem value={optionKey} id={optionKey} className="border-primary text-primary focus:ring-accent shrink-0" />
-                          <span className="flex-1">{currentQuestion!.options[optionKey]}</span>
-                          {showFeedback && isSelected && isCorrect && <CheckCircle className="ml-auto h-5 w-5 text-green-600 shrink-0" />}
-                          {showFeedback && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 text-red-600 shrink-0" />}
-                          {showFeedback && !isSelected && isCorrect && <CheckCircle className="ml-auto h-5 w-5 text-green-600 shrink-0 opacity-50" />}
+                          <RadioGroupItem value={optionKey} id={optionKey} className="border-primary text-primary focus:ring-accent shrink-0 mt-1" /> {/* Added mt-1 for alignment */}
+                           {/* Render option using ReactMarkdown */}
+                           <ReactMarkdown
+                             className="prose dark:prose-invert max-w-none flex-1" // Added flex-1
+                             components={{ code: CodeBlock }} // Use custom code renderer
+                           >
+                             {currentQuestion.options[optionKey]}
+                           </ReactMarkdown>
+                          {showFeedback && isSelected && isCorrect && <CheckCircle className="ml-auto h-5 w-5 text-green-600 shrink-0 mt-1" />}
+                          {showFeedback && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 text-red-600 shrink-0 mt-1" />}
+                          {showFeedback && !isSelected && isCorrect && <CheckCircle className="ml-auto h-5 w-5 text-green-600 shrink-0 opacity-50 mt-1" />}
                         </Label>
                       );
                     })}
@@ -274,7 +332,13 @@ export default function Home() {
                   {showFeedback && (
                     <div className="mt-4 rounded-md border border-muted bg-muted/30 p-4 text-sm dark:bg-muted/20">
                       <p className="font-semibold mb-1 text-foreground">Explanation:</p>
-                      <p className="text-muted-foreground">{currentQuestion!.explanation}</p>
+                      {/* Render explanation using ReactMarkdown */}
+                      <ReactMarkdown
+                        className="prose dark:prose-invert max-w-none text-muted-foreground"
+                        components={{ code: CodeBlock }}
+                      >
+                        {currentQuestion.explanation}
+                      </ReactMarkdown>
                     </div>
                   )}
 
