@@ -33,6 +33,7 @@ const QuizQuestionSchema = z.object({
     explanation: z.string().describe('A brief explanation of the correct answer.'),
     difficulty: z.enum(['easy', 'medium', 'hard']).describe('The difficulty level of the question.'),
   });
+export type QuizQuestion = z.infer<typeof QuizQuestionSchema>;
 
 // Updated Output schema for the user-facing function to include background information and flowchart
 const GenerateQuizQuestionsOutputSchema = z.object({
@@ -48,7 +49,7 @@ const GenerateTopicInfoInputSchema = z.object({
   topic: z.string().describe('The Computer Science topic to generate information about.'),
 });
 const GenerateTopicInfoOutputSchema = z.object({
-  information: z.string().describe('Generated background information about the Computer Science topic, focusing on key definitions, algorithms, data structures, principles, and concepts suitable for quiz questions. Provide a detailed overview (around 300-500 words).'),
+  information: z.string().describe('Generated, in-depth background information about the Computer Science topic (approx. 500-700 words). Focus on key definitions, algorithms, data structures, principles, core concepts, historical context, variations, and practical applications. Use well-structured, longer paragraphs suitable for detailed understanding and quiz generation.'),
 });
 
 // Schema for the final step of generating the quiz using topic + information
@@ -72,11 +73,25 @@ const generateTopicInfoPrompt = ai.definePrompt({
   output: {
     schema: GenerateTopicInfoOutputSchema,
   },
-  prompt: `You are an expert Computer Science educator. Generate detailed background information (around 300-500 words) about the specific Computer Science topic: "{{topic}}".
+  prompt: `You are an expert Computer Science educator tasked with creating comprehensive educational content.
 
-Cover key definitions, core concepts, relevant algorithms or data structures, important principles, and practical examples where applicable. The information should be accurate, clear, and comprehensive enough to serve as a basis for creating multiple-choice quiz questions across easy, medium, and hard difficulty levels. Structure the information logically.
+Generate **in-depth background information** (approximately 500-700 words) about the specific Computer Science topic: "{{topic}}".
 
-Return the information as a single string in the "information" field of the JSON output. If you cannot generate meaningful information for the topic, return an empty string for "information".`,
+Your explanation should be detailed and cover the following aspects where applicable:
+- **Core Definitions:** Clearly define the key terms associated with the topic.
+- **Fundamental Concepts:** Explain the underlying principles and ideas.
+- **Algorithms/Data Structures:** Detail relevant algorithms or data structures, including their purpose, steps, and characteristics (like time/space complexity).
+- **Key Principles:** Discuss important rules, guidelines, or theories related to the topic.
+- **Variations/Types:** If applicable, describe different types or variations of the concept.
+- **Historical Context:** Briefly mention the origin or evolution of the topic if relevant.
+- **Practical Applications/Examples:** Provide real-world examples or use cases where this topic is applied.
+- **Advantages and Disadvantages:** Discuss the pros and cons or trade-offs involved.
+
+**Structure:** Organize the information logically using **well-structured, longer paragraphs** to provide depth. Ensure the content flows smoothly and is easy to understand despite its detail.
+
+**Goal:** The generated information should be accurate, clear, and substantially detailed to serve as a solid foundation for creating challenging multiple-choice quiz questions across easy, medium, and hard difficulty levels.
+
+**Output:** Return the information as a single string within the "information" field of the JSON output. If you cannot generate meaningful, in-depth information for the topic (e.g., it's too obscure or ill-defined), return an empty string for "information".`,
 });
 
 
@@ -91,19 +106,19 @@ const generateQuizFromInfoPrompt = ai.definePrompt({
   },
   prompt: `You are an expert Computer Science quiz generator.
 
-Use the following background information to generate exactly 10 multiple-choice questions about the Computer Science topic "{{topic}}".
+Use the following detailed background information to generate exactly 10 multiple-choice questions about the Computer Science topic "{{topic}}".
 
 Background Information:
 ---
 {{{information}}}
 ---
 
-Ensure the questions are directly derived from the provided background information, testing understanding of the definitions, concepts, algorithms, and principles discussed.
+Ensure the questions are directly derived from the provided background information, testing understanding of the definitions, concepts, algorithms, principles, applications, and trade-offs discussed.
 
 Maintain a balanced difficulty distribution:
 - 3 easy questions (testing basic recall and definitions)
 - 4 medium questions (testing comprehension and application of concepts)
-- 3 hard questions (testing analysis, comparison, or deeper understanding)
+- 3 hard questions (testing analysis, comparison, or deeper understanding of nuances mentioned in the info)
 
 Each question MUST adhere strictly to the following format:
 - "question": The text of the question.
@@ -179,7 +194,7 @@ const generateQuizQuestionsFlow = ai.defineFlow<
 
       // Handle flowchart result
       if (flowchartResult.status === 'fulfilled') {
-        flowchart = flowchartResult.value.output?.flowchart ?? '';
+        flowchart = flowchartResult.value.flowchart ?? ''; // Access flowchart directly from output
       } else {
         console.error(`Error generating flowchart for topic "${input.topic}":`, flowchartResult.reason);
         // Proceed without flowchart if it fails
