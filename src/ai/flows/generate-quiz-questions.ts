@@ -167,4 +167,4 @@ const generateQuizQuestionsFlow = ai.defineFlow<
     // Return both the information and the quiz (which might be empty)
     return { information, quiz };
   }
-);
+); // This closes the ai.defineFlow block
