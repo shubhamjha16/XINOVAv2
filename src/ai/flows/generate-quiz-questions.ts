@@ -2,12 +2,12 @@
 'use server';
 
 /**
- * @fileOverview Generates a multiple-choice quiz on a given topic with varying difficulty levels.
- * First generates background information on the topic, then uses that information to create the quiz.
+ * @fileOverview Generates background information and a multiple-choice quiz on a given topic.
+ * First generates background information, then uses that information to create the quiz.
  *
- * - generateQuizQuestions - A function that generates quiz questions.
+ * - generateQuizQuestions - A function that generates background info and quiz questions.
  * - GenerateQuizQuestionsInput - The input type for the generateQuizQuestions function.
- * - GenerateQuizQuestionsOutput - The return type for the generateQuizQuestions function.
+ * - GenerateQuizQuestionsOutput - The return type for the generateQuizQuestions function, including both info and quiz.
  */
 
 import {ai} from '@/ai/ai-instance';
@@ -19,7 +19,7 @@ const GenerateQuizQuestionsInputSchema = z.object({
 });
 export type GenerateQuizQuestionsInput = z.infer<typeof GenerateQuizQuestionsInputSchema>;
 
-// Output schema remains the same for the user-facing function
+// Output schema for quiz questions remains the same
 const QuizQuestionSchema = z.object({
     question: z.string().describe('The question text.'),
     options: z.object({
@@ -33,8 +33,10 @@ const QuizQuestionSchema = z.object({
     difficulty: z.enum(['easy', 'medium', 'hard']).describe('The difficulty level of the question.'),
   });
 
+// Updated Output schema for the user-facing function to include background information
 const GenerateQuizQuestionsOutputSchema = z.object({
-  quiz: z.array(QuizQuestionSchema).describe('An array of quiz questions. If the topic is too broad or ambiguous to generate a meaningful quiz, this array might be empty.'),
+  information: z.string().optional().describe('Generated background information about the topic. This might be empty if generation failed.'),
+  quiz: z.array(QuizQuestionSchema).describe('An array of quiz questions. If the topic is too broad or ambiguous to generate a meaningful quiz, or if info generation failed, this array might be empty.'),
 });
 export type GenerateQuizQuestionsOutput = z.infer<typeof GenerateQuizQuestionsOutputSchema>;
 
@@ -53,6 +55,11 @@ const GenerateQuizFromInfoInputSchema = z.object({
   information: z.string().describe('The generated background information to use as context for the quiz questions.'),
 });
 
+// Schema for the output of the quiz generation prompt (only the quiz part)
+const GenerateQuizFromInfoOutputSchema = z.object({
+  quiz: z.array(QuizQuestionSchema).describe('An array of quiz questions. If the provided information is insufficient, this array might be empty.'),
+});
+
 
 // Prompt to generate background information
 const generateTopicInfoPrompt = ai.definePrompt({
@@ -67,7 +74,7 @@ const generateTopicInfoPrompt = ai.definePrompt({
 
 Focus on key facts, important concepts, relevant sub-topics, and details that would be suitable for creating multiple-choice quiz questions across easy, medium, and hard difficulty levels. Ensure the information is accurate and covers the core aspects of the topic.
 
-Return the information as a single string in the "information" field of the JSON output.`,
+Return the information as a single string in the "information" field of the JSON output. If you cannot generate meaningful information for the topic, return an empty string for "information".`,
 });
 
 
@@ -78,7 +85,7 @@ const generateQuizFromInfoPrompt = ai.definePrompt({
     schema: GenerateQuizFromInfoInputSchema,
   },
   output: {
-    schema: GenerateQuizQuestionsOutputSchema, // Use the final output schema
+    schema: GenerateQuizFromInfoOutputSchema, // Use the intermediate quiz-only output schema
   },
   prompt: `You are an expert quiz generator capable of creating engaging multiple-choice questions.
 
@@ -131,7 +138,7 @@ export async function generateQuizQuestions(input: GenerateQuizQuestionsInput): 
 // The main flow orchestrating the two steps
 const generateQuizQuestionsFlow = ai.defineFlow<
   typeof GenerateQuizQuestionsInputSchema,       // Takes the original topic input
-  typeof GenerateQuizQuestionsOutputSchema     // Returns the final quiz output
+  typeof GenerateQuizQuestionsOutputSchema     // Returns the final combined output (info + quiz)
 >(
   {
     name: 'generateQuizQuestionsFlow',
@@ -145,7 +152,8 @@ const generateQuizQuestionsFlow = ai.defineFlow<
 
     if (!information || information.trim() === '') {
       console.warn(`Could not generate sufficient information for topic: ${input.topic}`);
-      return { quiz: [] }; // Return empty quiz if info generation fails
+      // Return with empty info and quiz if info generation fails
+      return { information: '', quiz: [] };
     }
 
     // Step 2: Generate quiz using the topic and the generated information
@@ -154,7 +162,9 @@ const generateQuizQuestionsFlow = ai.defineFlow<
       information: information,
     });
 
-    // Ensure the output conforms to the schema, returning an empty array if null/undefined or if the quiz array is empty
-    return quizResponse.output && quizResponse.output.quiz ? quizResponse.output : { quiz: [] };
+    const quiz = quizResponse.output?.quiz ?? [];
+
+    // Return both the information and the quiz (which might be empty)
+    return { information, quiz };
   }
 );
