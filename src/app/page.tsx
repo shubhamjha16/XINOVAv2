@@ -181,9 +181,9 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12 bg-background">
-      <Card className="w-full max-w-3xl shadow-lg rounded-lg overflow-hidden">
+      <Card className="w-full max-w-3xl shadow-lg rounded-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
         <CardHeader className="text-center bg-primary text-primary-foreground p-6">
-          <CardTitle className="text-3xl font-bold">CS Quiz Master</CardTitle>
+          <CardTitle className="text-3xl font-bold">Xinova</CardTitle>
           <CardDescription className="text-primary-foreground/80">Generate info, flowcharts & quizzes on CS topics!</CardDescription>
         </CardHeader>
         <CardContent className="p-6 md:p-8 space-y-8">
@@ -197,10 +197,10 @@ export default function Home() {
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="e.g., Binary Search Trees, TCP/IP, Big O Notation"
-                  className="text-base"
+                  className="text-base transition-colors duration-200 focus:border-accent focus:ring-accent"
                 />
               </div>
-              <Button type="submit" className="w-full text-lg py-3" disabled={isLoading}>
+              <Button type="submit" className="w-full text-lg py-3 transition-transform duration-150 ease-in-out hover:scale-[1.02]" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -223,7 +223,7 @@ export default function Home() {
            {/* Display Areas */}
           <div className="space-y-8">
               {showInfoArea && (
-                 <div className="space-y-4 p-6 rounded-md border bg-card">
+                 <div className="space-y-4 p-6 rounded-md border bg-card animate-in fade-in duration-500">
                     <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
                       <Info className="h-5 w-5 text-accent" />
                       Background Information on "{topic}"
@@ -240,7 +240,7 @@ export default function Home() {
               )}
 
               {showFlowchartArea && (
-                 <div className="space-y-4 p-6 rounded-md border bg-card">
+                 <div className="space-y-4 p-6 rounded-md border bg-card animate-in fade-in duration-500 delay-100">
                     <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
                       <Workflow className="h-5 w-5 text-accent" />
                       Flowchart / Key Steps for "{topic}"
@@ -255,7 +255,7 @@ export default function Home() {
 
 
               {showQuizArea && currentQuestion && ( // Ensure currentQuestion is not null
-                <div className="space-y-6">
+                <div className="space-y-6 animate-in fade-in duration-500 delay-200">
                   {/* Quiz Title */}
                   <h3 className="text-2xl font-semibold text-center text-primary">Quiz Time!</h3>
 
@@ -305,11 +305,11 @@ export default function Home() {
                           htmlFor={optionKey}
                           className={cn(
                             "flex items-start space-x-3 rounded-md border p-4 transition-all duration-150 ease-in-out cursor-pointer", // Use items-start for better alignment with markdown
-                            "bg-card hover:bg-secondary/30", // Base and hover
+                            "bg-card hover:bg-secondary/30 transform hover:scale-[1.01]", // Base and hover with slight scale
                             !showFeedback && isSelected && "border-accent bg-accent/10 ring-2 ring-accent", // Selected but not submitted
                             showFeedback && isCorrect && "border-green-500 bg-green-50 dark:bg-green-950/50 ring-2 ring-green-500", // Correct answer shown
                             showFeedback && isSelected && !isCorrect && "border-red-500 bg-red-50 dark:bg-red-950/50 ring-2 ring-red-500", // Incorrect answer selected
-                            showFeedback && "cursor-not-allowed opacity-80 hover:bg-card", // Disabled after feedback
+                            showFeedback && "cursor-not-allowed opacity-80 hover:bg-card hover:scale-100", // Disabled after feedback, remove scale
                             showFeedback && !isSelected && !isCorrect && "opacity-60" // Dim unselected, incorrect options
                           )}
                         >
@@ -321,8 +321,8 @@ export default function Home() {
                            >
                              {currentQuestion.options[optionKey]}
                            </ReactMarkdown>
-                          {showFeedback && isSelected && isCorrect && <CheckCircle className="ml-auto h-5 w-5 text-green-600 shrink-0 mt-1" />}
-                          {showFeedback && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 text-red-600 shrink-0 mt-1" />}
+                          {showFeedback && isSelected && isCorrect && <CheckCircle className="ml-auto h-5 w-5 text-green-600 shrink-0 mt-1 animate-in zoom-in duration-300" />}
+                          {showFeedback && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 text-red-600 shrink-0 mt-1 animate-in zoom-in duration-300" />}
                           {showFeedback && !isSelected && isCorrect && <CheckCircle className="ml-auto h-5 w-5 text-green-600 shrink-0 opacity-50 mt-1" />}
                         </Label>
                       );
@@ -330,7 +330,7 @@ export default function Home() {
                   </RadioGroup>
 
                   {showFeedback && (
-                    <div className="mt-4 rounded-md border border-muted bg-muted/30 p-4 text-sm dark:bg-muted/20">
+                    <div className="mt-4 rounded-md border border-muted bg-muted/30 p-4 text-sm dark:bg-muted/20 animate-in fade-in duration-300">
                       <p className="font-semibold mb-1 text-foreground">Explanation:</p>
                       {/* Render explanation using ReactMarkdown */}
                       <ReactMarkdown
@@ -347,7 +347,7 @@ export default function Home() {
                     {!showFeedback && (
                       <Button
                         onClick={handleSubmitAnswer}
-                        className="flex-1 text-base py-2.5"
+                        className="flex-1 text-base py-2.5 transition-transform duration-150 ease-in-out hover:scale-[1.02]"
                         disabled={!selectedAnswer || isLoading}
                       >
                         Submit Answer
@@ -355,21 +355,21 @@ export default function Home() {
                     )}
 
                     {showFeedback && !isQuizFinished && (
-                      <Button onClick={handleNextQuestion} className="flex-1 text-base py-2.5">
+                      <Button onClick={handleNextQuestion} className="flex-1 text-base py-2.5 transition-transform duration-150 ease-in-out hover:scale-[1.02]">
                         Next Question
                       </Button>
                     )}
 
                     {/* Show Restart Button if any content (info, flowchart, or quiz) is displayed */}
                     {(showInfoArea || showFlowchartArea || showQuizArea) && (
-                        <Button onClick={handleRestartQuiz} variant="outline" className="flex-1 text-base py-2.5">
+                        <Button onClick={handleRestartQuiz} variant="outline" className="flex-1 text-base py-2.5 transition-transform duration-150 ease-in-out hover:scale-[1.02]">
                             Start Over
                         </Button>
                     )}
                   </div>
 
                   {isQuizFinished && (
-                     <div className="text-center space-y-6 pt-6 border-t mt-6">
+                     <div className="text-center space-y-6 pt-6 border-t mt-6 animate-in fade-in duration-500">
                        <p className="text-2xl font-bold text-primary">Quiz Complete!</p>
                        <p className="text-xl text-foreground">Your final score: <span className="font-bold">{score}</span> / {quiz.length}</p>
                        {/* Restart button is now part of the conditional rendering above */}
@@ -380,9 +380,9 @@ export default function Home() {
 
               {/* Message when only info/flowchart is available */}
               {!showQuizArea && (showInfoArea || showFlowchartArea) && !isLoading && (
-                  <div className="text-center space-y-4 pt-6 border-t mt-6">
+                  <div className="text-center space-y-4 pt-6 border-t mt-6 animate-in fade-in duration-500">
                       <p className="text-muted-foreground">Background content generated, but no quiz questions could be created for this topic.</p>
-                      <Button onClick={handleRestartQuiz} variant="outline" className="text-base py-2.5 px-6">
+                      <Button onClick={handleRestartQuiz} variant="outline" className="text-base py-2.5 px-6 transition-transform duration-150 ease-in-out hover:scale-[1.02]">
                           Try a Different Topic
                       </Button>
                   </div>
