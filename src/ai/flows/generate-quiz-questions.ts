@@ -28,8 +28,8 @@ const QuizQuestionSchema = z.object({
       B: z.string().describe('Option B.'),
       C: z.string().describe('Option C.'),
       D: z.string().describe('Option D.'),
-    }).describe('The answer choices. For coding questions, options might be code snippets or outputs.'),
-    correct_answer: z.enum(['A', 'B', 'C', 'D']).describe('The correct option.'),
+    }).describe('The answer choices. For coding questions, options might be code snippets, outputs, or conceptual statements. It remains a multiple-choice question.'),
+    correct_answer: z.enum(['A', 'B', 'C', 'D']).describe('The correct option (A, B, C, or D).'),
     explanation: z.string().describe('A brief explanation of the correct answer.'),
     difficulty: z.enum(['easy', 'medium', 'hard']).describe('The difficulty level of the question.'),
     isCodingQuestion: z.boolean().optional().describe('Set to true if this is a coding-related question/problem.'),
@@ -116,20 +116,20 @@ Background Information:
 
 The quiz should consist of two parts:
 1.  **10 Multiple-Choice Questions:** Derived directly from the provided background information, testing understanding of definitions, concepts, algorithms, principles, applications, and trade-offs.
-2.  **5 Coding Questions:** These should be practical problems, code analysis tasks, or conceptual coding questions related to the topic. They should still be multiple-choice format but focus on code. Set the "isCodingQuestion" field to true for these 5 questions.
+2.  **5 Coding Questions:** These should be practical problems, code analysis tasks, or conceptual coding questions related to the topic. **Crucially, these coding questions MUST still be in multiple-choice format (MCQ)**, with four options (A, B, C, D) and one correct answer. The options might contain code snippets, outputs, or conceptual statements about code. Set the "isCodingQuestion" field to \`true\` for these 5 questions.
 
-Ensure the questions are directly derived from the provided background information where applicable, especially for the non-coding questions.
+Ensure the non-coding questions are directly derived from the provided background information where applicable.
 
-Maintain a balanced difficulty distribution for the 10 multiple-choice questions:
+Maintain a balanced difficulty distribution for the 10 multiple-choice (non-coding) questions:
 - 3 easy questions (testing basic recall and definitions)
 - 4 medium questions (testing comprehension and application of concepts)
 - 3 hard questions (testing analysis, comparison, or deeper understanding)
 
-The 5 coding questions (questions 11-15) should generally be of medium to hard difficulty and MUST test practical application or analysis related to the topic.
+The 5 coding questions (questions 11-15) should generally be of medium to hard difficulty and MUST test practical application or analysis related to the topic, presented in a multiple-choice format.
 
 Each question MUST adhere strictly to the following format:
 - "question": The text of the question. For coding questions, this might describe a problem, ask to predict output, find a bug, or complete a snippet. Use markdown code formatting (like \`inline code\` or \`\`\`code blocks\`\`\`) within the question string if necessary.
-- "options": An object containing exactly four answer choices, labeled "A", "B", "C", and "D". One option must be clearly correct based on CS principles and the provided information (if applicable). Options for coding questions might be code snippets, outputs, or explanations. Use markdown code formatting in options if needed.
+- "options": An object containing exactly four answer choices, labeled "A", "B", "C", and "D". One option must be clearly correct based on CS principles and the provided information (if applicable). Options for coding questions might be code snippets, outputs, or explanations, but the format remains multiple-choice. Use markdown code formatting in options if needed.
 - "correct_answer": A single letter ("A", "B", "C", or "D") indicating the correct option.
 - "explanation": A concise, one-sentence explanation for why the correct answer is right, referencing the information or core CS concepts.
 - "difficulty": The difficulty level, strictly one of "easy", "medium", or "hard".
@@ -146,9 +146,9 @@ Example structure for a non-coding question object:
   "difficulty": "medium"
 }
 
-Example structure for a coding question object:
+Example structure for a coding question object (still MCQ):
 {
-  "question": "What is the output of the following Python code snippet related to {topic}?\\n\`\`\`python\\n# code relevant to topic here\\nprint(result)\\n\`\`\`",
+  "question": "What is the output of the following Python code snippet related to {topic}?\\n\`\`\`python\\n# code relevant to topic here\\nresult = ... \\nprint(result)\\n\`\`\`",
   "options": { "A": "Output A", "B": "Output B", "C": "Error", "D": "Output D" },
   "correct_answer": "A",
   "explanation": "The code executes [brief explanation of logic] resulting in the output 'Output A'.",
