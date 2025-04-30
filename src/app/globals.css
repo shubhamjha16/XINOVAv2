@@ -24,6 +24,10 @@ body {
     --accent-foreground: 0 0% 98%; /* White */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+    --success: 145 63% 42%; /* Green */
+    --success-foreground: 145 63% 95%; /* Light Green */
+    --warning: 45 93% 47%; /* Yellow */
+    --warning-foreground: 45 93% 95%; /* Light Yellow */
     --border: 210 20% 80%; /* Lighter blue/gray border */
     --input: 210 20% 85%; /* Lighter input background */
     --ring: 207 68% 53%; /* Teal for focus rings */
@@ -59,6 +63,10 @@ body {
     --accent-foreground: 210 29% 10%; /* Very Dark Blue */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
+    --success: 145 63% 30%; /* Dark Green */
+    --success-foreground: 145 63% 85%; /* Lighter Green */
+    --warning: 45 93% 35%; /* Dark Yellow */
+    --warning-foreground: 45 93% 85%; /* Lighter Yellow */
     --border: 210 29% 25%; /* Darker border */
     --input: 210 29% 20%; /* Medium Dark Blue */
     --ring: 207 68% 53%; /* Teal */
