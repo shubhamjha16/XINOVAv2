@@ -316,7 +316,7 @@ export default function Home() {
         <CardHeader className="text-center bg-primary text-primary-foreground p-6">
           <div className="flex items-center justify-center gap-2">
              <Stethoscope className="h-8 w-8" />
-             <CardTitle className="text-3xl font-bold">Iksir</CardTitle> {/* Updated name */}
+             <CardTitle className="text-3xl font-bold">Iksir</CardTitle> {/* Changed title here */}
           </div>
           <CardDescription className="text-primary-foreground/80">Enter symptoms for a preliminary analysis (Informational Use Only)</CardDescription>
         </CardHeader>
