@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Suggests a general, non-pharmacological prescription based on the finalized potential diagnosis.
+ * @fileOverview Suggests a general, non-pharmacological prescription based on the finalized potential diagnosis, potentially including common OTC symptom relief suggestions.
  *
  * - generatePrescription - Suggests general advice based on the assessed condition.
  */
@@ -27,9 +27,9 @@ const generatePrescriptionPrompt = ai.definePrompt({
   output: {
     schema: GeneratePrescriptionOutputSchema, // Use imported schema
   },
-  prompt: `You are an AI medical assistant providing informational suggestions. **You CANNOT prescribe medication.**
+  prompt: `You are an AI medical assistant providing informational suggestions. **You CANNOT provide medical prescriptions.**
 
-Based on the following final assessment, generate general, **non-pharmacological** advice relevant to the most likely condition(s).
+Based on the following final assessment, generate general wellness advice relevant to the most likely condition(s). You may suggest common over-the-counter (OTC) medications STRICTLY for symptom relief where appropriate, but you MUST emphasize these are NOT prescriptions and professional consultation is required before taking anything.
 
 Final Assessment:
 ---
@@ -45,13 +45,14 @@ Recommendation: {{finalAssessment.recommendation}}
 **Task:**
 1.  Create a 'suggestedPrescription' text. This should include:
     *   General wellness advice (e.g., rest, hydration, appropriate diet if relevant).
-    *   Symptom management tips (e.g., cool compresses for fever - **NO specific OTC drug names**).
+    *   Symptom management tips (e.g., cool compresses for fever).
+    *   If relevant and appropriate for **symptom relief only**, you may mention **common, generic OTC medication names** (e.g., "acetaminophen or ibuprofen for fever/pain relief"). **Crucially, always follow such suggestions with a strong warning to consult a doctor or pharmacist before taking any medication.**
     *   Guidance on monitoring symptoms based on the assessment.
     *   Reiteration of the recommendation provided in the final assessment (e.g., "As recommended, please consult your doctor...").
-    *   **Crucially, start this text with:** "General Advice (Not a Medical Prescription): "
-2.  Create an 'importantDisclaimer' text: "IMPORTANT: This is general information ONLY and NOT a medical prescription. It does not replace consultation with a qualified healthcare professional. Do not use this information to self-diagnose or self-treat. Follow your doctor's specific instructions."
+    *   **MUST start this text with:** "General Advice (Not a Medical Prescription): "
+2.  Create an 'importantDisclaimer' text: "IMPORTANT: This is general information ONLY and NOT a medical prescription. It does not replace consultation with a qualified healthcare professional. Do not use this information to self-diagnose or self-treat. Always consult your doctor or pharmacist before taking any medication, even over-the-counter ones. Follow your doctor's specific instructions."
 
-Return ONLY the JSON object containing 'suggestedPrescription' and 'importantDisclaimer', adhering to the output schema.`,
+Return ONLY the JSON object containing 'suggestedPrescription' and 'importantDisclaimer', adhering to the output schema. Ensure any mention of OTC medication is heavily caveated.`,
 });
 
 
@@ -62,7 +63,7 @@ export async function generatePrescription(input: GeneratePrescriptionInput): Pr
       console.log("Skipping prescription generation as no likely disease was identified.");
        return {
            suggestedPrescription: "General Advice (Not a Medical Prescription): No specific advice can be given as a likely condition was not determined. Please consult a healthcare professional based on the initial recommendation.",
-           importantDisclaimer: "IMPORTANT: This is general information ONLY and NOT a medical prescription. It does not replace consultation with a qualified healthcare professional. Do not use this information to self-diagnose or self-treat. Follow your doctor's specific instructions."
+           importantDisclaimer: "IMPORTANT: This is general information ONLY and NOT a medical prescription. It does not replace consultation with a qualified healthcare professional. Do not use this information to self-diagnose or self-treat. Always consult your doctor or pharmacist before taking any medication, even over-the-counter ones. Follow your doctor's specific instructions."
        };
   }
   return generatePrescriptionFlow(input);
@@ -80,8 +81,8 @@ const generatePrescriptionFlow = ai.defineFlow<
     outputSchema: GeneratePrescriptionOutputSchema, // Use imported schema
   },
   async (input) => {
-    console.log('Generating non-pharmacological suggestions for:', input.finalAssessment.refinedPossibleDiseases[0]?.disease);
-    const defaultDisclaimer = "IMPORTANT: This is general information ONLY and NOT a medical prescription. It does not replace consultation with a qualified healthcare professional. Do not use this information to self-diagnose or self-treat. Follow your doctor's specific instructions.";
+    console.log('Generating general suggestions for:', input.finalAssessment.refinedPossibleDiseases[0]?.disease);
+    const defaultDisclaimer = "IMPORTANT: This is general information ONLY and NOT a medical prescription. It does not replace consultation with a qualified healthcare professional. Do not use this information to self-diagnose or self-treat. Always consult your doctor or pharmacist before taking any medication, even over-the-counter ones. Follow your doctor's specific instructions.";
     const defaultSuggestion = "General Advice (Not a Medical Prescription): Please follow the recommendations provided in the final assessment and consult a healthcare professional.";
 
     try {
@@ -106,7 +107,7 @@ const generatePrescriptionFlow = ai.defineFlow<
        }
 
 
-      console.log('Prescription suggestions generated.');
+      console.log('General suggestions generated.');
       return output;
     } catch (error) {
       console.error('Error in generatePrescriptionFlow:', error);
