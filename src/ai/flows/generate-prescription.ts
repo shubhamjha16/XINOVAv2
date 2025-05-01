@@ -27,9 +27,9 @@ const generatePrescriptionPrompt = ai.definePrompt({
   output: {
     schema: GeneratePrescriptionOutputSchema, // Use imported schema
   },
-  prompt: `You are an AI medical assistant providing informational suggestions. **You CANNOT provide medical prescriptions.**
+  prompt: `You are an AI medical assistant providing informational suggestions. **You CANNOT provide medical prescriptions or specific medication recommendations that treat the underlying cause (e.g., antibiotics for infections). Your role is strictly limited to general wellness advice and common over-the-counter (OTC) options for SYMPTOM RELIEF ONLY.**
 
-Based on the following final assessment, generate general wellness advice relevant to the most likely condition(s). You may suggest common over-the-counter (OTC) medications STRICTLY for symptom relief where appropriate, but you MUST emphasize these are NOT prescriptions and professional consultation is required before taking anything.
+Based on the following final assessment, generate general wellness advice relevant to the most likely condition(s).
 
 Final Assessment:
 ---
@@ -45,14 +45,14 @@ Recommendation: {{finalAssessment.recommendation}}
 **Task:**
 1.  Create a 'suggestedPrescription' text. This should include:
     *   General wellness advice (e.g., rest, hydration, appropriate diet if relevant).
-    *   Symptom management tips (e.g., cool compresses for fever).
-    *   If relevant and appropriate for **symptom relief only**, you may mention **common, generic OTC medication names** (e.g., "acetaminophen or ibuprofen for fever/pain relief"). **Crucially, always follow such suggestions with a strong warning to consult a doctor or pharmacist before taking any medication.**
-    *   Guidance on monitoring symptoms based on the assessment.
+    *   Symptom management tips (e.g., cool compresses for fever, humidifier for cough).
+    *   **If relevant and appropriate for SYMPTOM RELIEF ONLY**, you may mention **common, generic OTC medication categories or names** (e.g., "acetaminophen or ibuprofen for fever/pain relief", "cough drops for sore throat"). **Crucially, ALWAYS follow such suggestions with a strong warning to consult a doctor or pharmacist before taking ANY medication, emphasizing these are for symptom relief and do not cure the underlying condition.** Do NOT suggest specific dosages or frequencies. **ABSOLUTELY DO NOT suggest prescription medications or treatments that target the disease itself (like antibiotics, antivirals, specific inhalers, etc.).**
+    *   Guidance on monitoring symptoms based on the assessment (e.g., "Watch for worsening symptoms like...").
     *   Reiteration of the recommendation provided in the final assessment (e.g., "As recommended, please consult your doctor...").
     *   **MUST start this text with:** "General Advice (Not a Medical Prescription): "
-2.  Create an 'importantDisclaimer' text: "IMPORTANT: This is general information ONLY and NOT a medical prescription. It does not replace consultation with a qualified healthcare professional. Do not use this information to self-diagnose or self-treat. Always consult your doctor or pharmacist before taking any medication, even over-the-counter ones. Follow your doctor's specific instructions."
+2.  Create an 'importantDisclaimer' text: "IMPORTANT: This is general information ONLY and NOT a medical prescription. It does not replace consultation with a qualified healthcare professional. Do not use this information to self-diagnose or self-treat. Always consult your doctor or pharmacist before taking any medication, including over-the-counter ones, especially to understand potential interactions and if it's appropriate for you. Symptom relief medication does not cure the underlying illness. Follow your doctor's specific instructions."
 
-Return ONLY the JSON object containing 'suggestedPrescription' and 'importantDisclaimer', adhering to the output schema. Ensure any mention of OTC medication is heavily caveated.`,
+Return ONLY the JSON object containing 'suggestedPrescription' and 'importantDisclaimer', adhering to the output schema. Ensure any mention of OTC medication is heavily caveated and limited to symptom relief.`,
 });
 
 
@@ -102,7 +102,7 @@ const generatePrescriptionFlow = ai.defineFlow<
        if (!output.suggestedPrescription.startsWith("General Advice (Not a Medical Prescription):")) {
            output.suggestedPrescription = "General Advice (Not a Medical Prescription): " + output.suggestedPrescription;
        }
-       if (!output.importantDisclaimer || output.importantDisclaimer.length < 10) { // Basic check
+       if (!output.importantDisclaimer || !output.importantDisclaimer.startsWith("IMPORTANT:")) { // Basic check for disclaimer presence
            output.importantDisclaimer = defaultDisclaimer;
        }
 
