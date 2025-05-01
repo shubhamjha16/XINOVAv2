@@ -1,0 +1,33 @@
+
+name: Push Code to Repository
+
+on:
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  push_code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for all branches and tags
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add remote repository
+        run: git remote add target https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/shubhamjha16/iksir.git
+
+      - name: Push to main branch
+        run: |
+          # Ensure we are on the main branch locally or create it if it doesn't exist
+          git checkout main || git checkout -b main
+          # Force push the current state to the 'main' branch of the target repository
+          git push --force target main
+
+      - name: Verify push (optional)
+        run: echo "Code pushed successfully to https://github.com/shubhamjha16/iksir"
+
