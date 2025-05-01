@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster" // Added Toaster
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' }); // Use Inter font
 
 export const metadata: Metadata = {
-  title: 'Xinova - Symptom Checker', // Updated title
+  title: 'Iksir - Symptom Checker', // Updated title to Iksir
   description: 'AI-powered symptom analysis (Informational Use Only)', // Updated description
 };
 

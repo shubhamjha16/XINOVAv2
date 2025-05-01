@@ -316,7 +316,7 @@ export default function Home() {
         <CardHeader className="text-center bg-primary text-primary-foreground p-6">
           <div className="flex items-center justify-center gap-2">
              <Stethoscope className="h-8 w-8" />
-             <CardTitle className="text-3xl font-bold">Xinova Symptom Checker</CardTitle>
+             <CardTitle className="text-3xl font-bold">Iksir Symptom Checker</CardTitle> {/* Updated name */}
           </div>
           <CardDescription className="text-primary-foreground/80">Enter symptoms for a preliminary analysis (Informational Use Only)</CardDescription>
         </CardHeader>
@@ -547,7 +547,7 @@ export default function Home() {
                  </Alert>
 
                  <div className="space-y-2">
-                     <Label className="font-medium">Suggestions (Non-Pharmacological):</Label>
+                     <Label className="font-medium">Suggested Prescription:</Label>
                      {/* Using whitespace-pre-wrap to respect formatting from AI potentially */}
                      <p className="text-base text-foreground whitespace-pre-wrap bg-muted/30 p-4 rounded-md border">
                          {prescriptionResult.suggestedPrescription}
