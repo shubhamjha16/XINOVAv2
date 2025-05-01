@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/toaster" // Added Toaster
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' }); // Use Inter font
 
 export const metadata: Metadata = {
-  title: 'Xinova', // Updated title
-  description: 'Generate quizzes on any topic!', // Updated description
+  title: 'Xinova - Symptom Checker', // Updated title
+  description: 'AI-powered symptom analysis (Informational Use Only)', // Updated description
 };
 
 export default function RootLayout({

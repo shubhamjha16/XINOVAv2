@@ -1,14 +1,16 @@
-# Xinova - AI Quiz Generator
+# Xinova - AI Symptom Checker (Informational Use Only)
 
-This is a Next.js application that uses Generative AI (Google AI via Genkit) to generate background information, flowcharts, and quizzes on Computer Science topics.
+This is a Next.js application that uses Generative AI (Google AI via Genkit) to provide a preliminary analysis of user-described symptoms. **This tool is for informational purposes only and does NOT provide medical diagnoses or replace professional medical advice.**
 
 ## Features
 
--   **Topic Input:** Enter any Computer Science topic.
--   **Information Generation:** Get detailed background information on the topic.
--   **Flowchart Generation:** Visualize the key steps or concepts with a textual flowchart.
--   **Quiz Generation:** Test your knowledge with 15 multiple-choice questions (including coding questions) sorted by difficulty.
--   **Interactive Quiz:** Get immediate feedback and explanations for your answers.
+-   **Symptom Input:** Describe your symptoms in detail.
+-   **Initial Analysis:** Get a list of potential conditions based on your symptoms, including estimated probabilities and reasoning (AI-generated, not a diagnosis).
+-   **Clarifying Questions:** Answer AI-generated multiple-choice questions to help refine the analysis.
+-   **Refined Assessment:** View an updated list of potential conditions based on your answers.
+-   **General Advice:** Receive general, non-pharmacological suggestions related to the potential conditions (e.g., rest, hydration).
+
+**IMPORTANT DISCLAIMER:** This application uses AI and is not a substitute for professional medical evaluation. Always consult a qualified healthcare provider for diagnosis and treatment.
 
 ## Tech Stack
 
@@ -49,6 +51,10 @@ This is a Next.js application that uses Generative AI (Google AI via Genkit) to 
         GOOGLE_GENAI_API_KEY=YOUR_GOOGLE_API_KEY_HERE
         ```
     *   You can obtain a key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+    *   *(Optional)* If you configure other models (like Deepseek), add their keys:
+        ```env
+        # DEEPSEEK_API_KEY=YOUR_DEEPSEEK_API_KEY_HERE
+        ```
 
 ### Running the Development Server
 
@@ -69,23 +75,28 @@ This is a Next.js application that uses Generative AI (Google AI via Genkit) to 
 
 ## How it Works
 
-1.  The user enters a Computer Science topic on the main page (`src/app/page.tsx`).
-2.  The `generateQuizQuestions` Genkit flow (`src/ai/flows/generate-quiz-questions.ts`) is invoked.
-3.  This flow first calls the `generateTopicInfoPrompt` to generate background information using the AI model.
-4.  Then, it calls `generateFlowchart` (`src/ai/flows/generate-flowchart.ts`) to create a textual flowchart from the information.
-5.  Finally, it calls `generateQuizFromInfoPrompt` to generate 15 multiple-choice questions based on the information.
-6.  The generated content (information, flowchart, and quiz) is returned to the frontend and displayed to the user.
-7.  The quiz interface allows the user to answer questions, receive feedback, and track their score.
+1.  The user describes their symptoms on the main page (`src/app/page.tsx`).
+2.  The `analyzeSymptoms` Genkit flow (`src/ai/flows/analyze-symptoms.ts`) is invoked. It identifies potential conditions and probabilities based solely on the input.
+3.  If the AI determines more information is needed, the `generateClarifyingQuestions` flow (`src/ai/flows/generate-clarifying-questions.ts`) creates multiple-choice questions.
+4.  The user answers these questions on the frontend.
+5.  The `finalizeDiagnosis` flow (`src/ai/flows/finalize-diagnosis.ts`) takes the original symptoms, initial analysis, questions, and answers to provide a refined assessment and general recommendations.
+6.  The `generatePrescription` flow (`src/ai/flows/generate-prescription.ts`) generates general, non-pharmacological advice based on the final assessment.
+7.  Each step's results are displayed sequentially to the user, emphasizing the informational nature and the need for professional consultation.
 
 ## Project Structure
 
 -   `src/app/`: Next.js App Router pages and layout.
+    -   `page.tsx`: The main UI for the symptom checker workflow.
 -   `src/ai/`: Contains Genkit configuration, flows, and prompts.
     -   `ai-instance.ts`: Configures the Genkit instance and AI model.
     -   `dev.ts`: Entry point for the Genkit development server.
-    -   `flows/`: Contains the Genkit flows for generating content.
+    -   `flows/`: Contains the Genkit flows for symptom analysis, question generation, final assessment, and advice generation.
 -   `src/components/`: Reusable UI components (mostly ShadCN).
 -   `src/hooks/`: Custom React hooks (e.g., `useToast`, `useMobile`).
 -   `src/lib/`: Utility functions.
 -   `public/`: Static assets.
 -   `styles/`: Global CSS and Tailwind configuration.
+
+## Disclaimer
+
+This project is intended for educational and illustrative purposes only. It demonstrates the use of generative AI but should **NEVER** be used for actual medical diagnosis or treatment decisions. Medical AI requires rigorous validation, ethical considerations, and regulatory compliance not implemented here.

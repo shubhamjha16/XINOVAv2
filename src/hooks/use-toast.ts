@@ -11,11 +11,13 @@ import type {
 const TOAST_LIMIT = 3 // Increased limit
 const TOAST_REMOVE_DELAY = 10000 // Adjusted delay
 
+// Add variant type to ToasterToast
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  variant?: 'default' | 'destructive' | 'success' | 'warning' | 'info' // Added variants
 }
 
 const actionTypes = {
@@ -58,12 +60,13 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string, duration?: number) => { // Added optional duration
   if (toastTimeouts.has(toastId)) {
-    // Clear existing timeout if the toast is updated or dismissed again
     clearTimeout(toastTimeouts.get(toastId));
     toastTimeouts.delete(toastId);
   }
+
+  const delay = duration ?? TOAST_REMOVE_DELAY; // Use provided duration or default
 
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId)
@@ -71,7 +74,7 @@ const addToRemoveQueue = (toastId: string) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, TOAST_REMOVE_DELAY)
+  }, delay) // Use the calculated delay
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -79,7 +82,6 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
-       // Remove oldest toasts if limit is reached
        const newToasts = [action.toast, ...state.toasts];
        if (newToasts.length > TOAST_LIMIT) {
          const toastsToRemove = newToasts.slice(TOAST_LIMIT);
@@ -96,9 +98,10 @@ export const reducer = (state: State, action: Action): State => {
       }
 
     case "UPDATE_TOAST":
-      // Reset the dismiss timeout
       if (action.toast.id) {
-        addToRemoveQueue(action.toast.id);
+        // Use existing duration if available, otherwise default
+         const existingToast = state.toasts.find(t => t.id === action.toast.id);
+         addToRemoveQueue(action.toast.id, action.toast.duration ?? existingToast?.duration);
       }
       return {
         ...state,
@@ -109,17 +112,15 @@ export const reducer = (state: State, action: Action): State => {
 
     case "DISMISS_TOAST": {
       const { toastId } = action
-
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
-        addToRemoveQueue(toastId)
+         // Find the toast to get its duration for removal queue
+         const toastToDismiss = state.toasts.find(t => t.id === toastId);
+         addToRemoveQueue(toastId, toastToDismiss?.duration);
       } else {
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
+          addToRemoveQueue(toast.id, toast.duration) // Use individual durations
         })
       }
-
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -134,7 +135,6 @@ export const reducer = (state: State, action: Action): State => {
     }
     case "REMOVE_TOAST":
       if (action.toastId === undefined) {
-        // Clear all timeouts when removing all toasts
         toastTimeouts.forEach(timeout => clearTimeout(timeout));
         toastTimeouts.clear();
         return {
@@ -142,7 +142,6 @@ export const reducer = (state: State, action: Action): State => {
           toasts: [],
         }
       }
-       // Clear timeout for the specific toast being removed
        if (toastTimeouts.has(action.toastId)) {
          clearTimeout(toastTimeouts.get(action.toastId));
          toastTimeouts.delete(action.toastId);
@@ -165,9 +164,13 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+// Update Toast type to include optional variant and duration
+type Toast = Omit<ToasterToast, "id"> & {
+  duration?: number; // Add duration option
+};
 
-function toast({ ...props }: Toast) {
+
+function toast({ duration, ...props }: Toast) { // Destructure duration
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -183,14 +186,15 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      duration: duration, // Store duration in the toast state
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
     },
   })
 
-  // Start the dismiss timer immediately upon adding
-  addToRemoveQueue(id);
+  // Start dismiss timer using the provided or default duration
+  addToRemoveQueue(id, duration);
 
   return {
     id: id,

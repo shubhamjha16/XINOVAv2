@@ -32,6 +32,13 @@ const toastVariants = cva(
         default: "border bg-background text-foreground",
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
+        // Added variants based on Alert component styles
+        success:
+          "success group border-green-500/50 bg-green-50 text-green-800 dark:border-green-600/50 dark:bg-green-950/30 dark:text-green-400",
+        warning:
+          "warning group border-yellow-500/50 bg-yellow-50 text-yellow-800 dark:border-yellow-600/50 dark:bg-yellow-950/30 dark:text-yellow-400",
+        info:
+          "info group border-blue-500/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400",
       },
     },
     defaultVariants: {
@@ -39,6 +46,11 @@ const toastVariants = cva(
     },
   }
 )
+
+
+// Define variant type explicitly based on cva variants
+export type ToastVariant = VariantProps<typeof toastVariants>["variant"];
+
 
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
@@ -62,7 +74,12 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      // Adjustments for variants
+      "group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+      "group-[.success]:border-muted/40 group-[.success]:hover:border-green-500/30 group-[.success]:hover:bg-green-100 group-[.success]:hover:text-green-900 group-[.success]:focus:ring-green-500", // Success adjustments
+      "group-[.warning]:border-muted/40 group-[.warning]:hover:border-yellow-500/30 group-[.warning]:hover:bg-yellow-100 group-[.warning]:hover:text-yellow-900 group-[.warning]:focus:ring-yellow-500", // Warning adjustments
+      "group-[.info]:border-muted/40 group-[.info]:hover:border-blue-500/30 group-[.info]:hover:bg-blue-100 group-[.info]:hover:text-blue-900 group-[.info]:focus:ring-blue-500", // Info adjustments
       className
     )}
     {...props}
@@ -77,7 +94,12 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
+      // Adjustments for variants
+      "group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      "group-[.success]:text-green-500 group-[.success]:hover:text-green-700 group-[.success]:focus:ring-green-400 group-[.success]:focus:ring-offset-green-600", // Success adjustments
+      "group-[.warning]:text-yellow-500 group-[.warning]:hover:text-yellow-700 group-[.warning]:focus:ring-yellow-400 group-[.warning]:focus:ring-offset-yellow-600", // Warning adjustments
+      "group-[.info]:text-blue-500 group-[.info]:hover:text-blue-700 group-[.info]:focus:ring-blue-400 group-[.info]:focus:ring-offset-blue-600", // Info adjustments
       className
     )}
     toast-close=""

@@ -11,6 +11,12 @@ const alertVariants = cva(
         default: "bg-background text-foreground",
         destructive:
           "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+        // Add info variant (e.g., blue)
+        info: "border-blue-500/50 text-blue-700 dark:border-blue-700/50 dark:text-blue-400 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-500 bg-blue-50 dark:bg-blue-950/30",
+        // Add warning variant (e.g., yellow/orange)
+        warning: "border-yellow-500/50 text-yellow-800 dark:border-yellow-600/50 dark:text-yellow-400 [&>svg]:text-yellow-600 dark:[&>svg]:text-yellow-500 bg-yellow-50 dark:bg-yellow-950/30",
+         // Add success variant (e.g., green) - useful for success messages
+        success: "border-green-500/50 text-green-800 dark:border-green-600/50 dark:text-green-400 [&>svg]:text-green-600 dark:[&>svg]:text-green-500 bg-green-50 dark:bg-green-950/30",
       },
     },
     defaultVariants: {
